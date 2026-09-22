@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Report Management</title>
+  <style>
+    :root {
+      --bg: #edf3f8;
+      --panel: #ffffff;
+      --panel-alt: #f5f8fa;
+      --line: #d9e2ea;
+      --primary: #173d59;
+      --primary-dark: #0f2d46;
+      --text: #1b2b39;
+      --muted: #607080;
+      --danger: #b23a48;
+      --success: #237a57;
+      --shadow: 0 10px 30px rgba(17, 31, 44, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body { padding: 20px; }
+
+    .shell { max-width: 1100px; margin: 0 auto; }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .login-panel { max-width: 440px; margin: 8vh auto; }
+
+    h1 {
+      margin: 0 0 24px;
+      font-size: clamp(1.8rem, 3vw, 2.5rem);
+      letter-spacing: 0.06em;
+      text-align: center;
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: clamp(1.2rem, 2vw, 1.6rem);
+    }
+
+    h3 { margin: 0; font-size: 1.15rem; }
+
+    label {
+      display: block;
+      margin: 14px 0 6px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    input, textarea, button {
+      width: 100%;
+      border-radius: 10px;
+      font: inherit;
+    }
+
+    input, textarea {
+      border: 1px solid #c7d3dd;
+      padding: 12px 14px;
+      color: inherit;
+      background: #fff;
+    }
+
+    input:focus, textarea:focus {
+      outline: 2px solid rgba(33, 106, 146, 0.2);
+      border-color: #2b6f95;
+    }
+
+    textarea {
+      min-height: 160px;
+      resize: vertical;
+      font-family: Consolas, monospace;
+      font-size: 0.82rem;
+    }
+
+    button {
+      border: none;
+      padding: 12px 16px;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    button:hover { background: var(--primary-dark); }
+    button:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+      padding: 14px 18px;
+    }
+
+    .user-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-size: 0.95rem;
+    }
+
+    .logout-btn {
+      width: auto;
+      min-width: 96px;
+      background: var(--danger);
+      padding: 10px 14px;
+    }
+
+    .logout-btn:hover { background: #942d3c; }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .tabs button {
+      flex: 1 1 180px;
+      background: #dfe8ee;
+      color: var(--primary);
+    }
+
+    .tabs button.active {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .section { display: none; }
+    .section.active { display: block; }
+
+    .admin-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 1.4fr;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .stats-card, .import-card, .search-card, .history-card, .management-card {
+      background: var(--panel-alt);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 18px;
+    }
+
+    .management-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .management-header .add-btn {
+      width: auto;
+      min-width: 140px;
+      background: #1d7a44;
+    }
+
+    .management-header .add-btn:hover { background: #165f36; }
+
+    .lead-summary {
+      margin-top: 14px;
+      background: #183b56;
+      color: #fff;
+      border-radius: 12px;
+      padding: 18px 16px;
+      text-align: center;
+    }
+
+    .lead-label {
+      font-size: 0.85rem;
+      opacity: 0.8;
+      margin-bottom: 8px;
+    }
+
+    .lead-value {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 700;
+      line-height: 1.1;
+    }
+
+    .lead-caption {
+      font-size: 0.82rem;
+      opacity: 0.8;
+      margin-top: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .lead-empty, .history-empty, .table-empty {
+      margin-top: 14px;
+      padding: 18px;
+      border-radius: 10px;
+      background: #eaf1f5;
+      border: 1px dashed var(--line);
+      color: var(--muted);
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .history-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--line);
+      font-size: 0.94rem;
+    }
+
+    .history-row:last-child { border-bottom: none; }
+    .history-header { font-weight: 700; color: var(--primary); }
+
+    .actions {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .actions > div { flex: 1; }
+    .actions button {
+      width: auto;
+      min-width: 110px;
+      padding: 12px 18px;
+    }
+
+    .result { margin-top: 18px; }
+
+    .result-card {
+      padding: 14px;
+      margin-top: 8px;
+      background: #f3f7fa;
+      border-left: 4px solid #2b6f95;
+      border-radius: 10px;
+    }
+
+    .result-card strong {
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    .report-line {
+      padding: 6px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .message {
+      margin-top: 12px;
+      font-size: 0.9rem;
+      text-align: center;
+      min-height: 20px;
+    }
+
+    .error { color: var(--danger); }
+    .success { color: var(--success); }
+
+    .hint {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 0.77rem;
+      line-height: 1.5;
+    }
+
+    .table-wrap { overflow-x: auto; margin-top: 12px; }
+
+    .report-management-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      min-width: 720px;
+    }
+
+    .report-management-table th, .report-management-table td {
+      border-bottom: 1px solid var(--line);
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+      font-size: 0.82rem;
+      word-break: break-word;
+    }
+
+    .report-management-table th {
+      background: #eaf1f6;
+      color: var(--primary);
+      font-size: 0.76rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .action-cell { white-space: nowrap; }
+
+    .table-action {
+      width: auto;
+      display: inline-block;
+      margin: 2px 4px 2px 0;
+      min-height: 32px;
+      padding: 7px 10px;
+      font-size: 0.75rem;
+      border-radius: 8px;
+    }
+
+    .table-action.view { background: #305f8d; }
+    .table-action.edit { background: #1e7a6f; }
+    .table-action.delete { background: var(--danger); }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(7, 16, 24, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 50;
+    }
+
+    .modal-card {
+      width: min(680px, 100%);
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 20px 50px rgba(7, 16, 24, 0.22);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .icon-close {
+      width: 38px;
+      min-width: 38px;
+      height: 38px;
+      padding: 0;
+      background: #dde5ec;
+      color: var(--text);
+      font-size: 1.3rem;
+      border-radius: 10px;
+    }
+
+    .icon-close:hover { background: #cadeeb; }
+
+    .modal-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px 16px;
+    }
+
+    .full-width { grid-column: 1 / -1; }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .modal-actions button {
+      width: auto;
+      min-width: 120px;
+    }
+
+    .modal-actions .secondary {
+      background: #dfe7ee;
+      color: var(--primary);
+    }
+
+    .modal-actions .secondary:hover { background: #d1dde8; }
+    .hidden { display: none !important; }
+
+    @media (max-width: 820px) {
+      body { padding: 12px; }
+      .admin-grid { grid-template-columns: 1fr; }
+      .panel { padding: 18px; }
+      .tabs { gap: 6px; }
+      .topbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .logout-btn { width: 100%; }
+      .modal-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 520px) {
+      .shell { max-width: 100%; }
+      .panel { padding: 16px; border-radius: 12px; }
+      .management-header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .management-header .add-btn { width: 100%; }
+      .actions { display: block; }
+      .actions button { width: 100%; margin-top: 8px; }
+      .history-row { grid-template-columns: 1fr; gap: 4px; }
+      input, textarea, button { min-height: 46px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section id="loginView" class="panel login-panel">
+      <h1>REPORT</h1>
+      <label for="loginUser">Username</label>
+      <input id="loginUser" autocomplete="username" placeholder="Admin or worker">
+      <label for="loginPass">Password</label>
+      <input id="loginPass" type="password" autocomplete="current-password" placeholder="Enter password">
+      <button id="loginBtn" type="button">LOGIN</button>
+      <div id="loginMsg" class="message"></div>
+    </section>
+
+    <section id="appView" class="hidden">
+      <header class="topbar panel">
+        <div class="user-meta">
+          <span>Logged in:</span>
+          <strong id="currentUser"></strong>
+          <span>/</span>
+          <strong id="currentRole"></strong>
+        </div>
+        <button class="logout-btn" type="button" onclick="logout()">LOGOUT</button>
+      </header>
+
+      <nav class="tabs">
+        <button id="tabWorker" type="button">WORKER</button>
+        <button id="tabAdmin" type="button">ADMIN</button>
+      </nav>
+
+      <section id="worker" class="panel section">
+        <h2>Find Report</h2>
+        <label for="workerDate">Date</label>
+        <input id="workerDate" type="date">
+
+        <div class="actions">
+          <div>
+            <label for="workerUsername">Username</label>
+            <input id="workerUsername" placeholder="Username">
+          </div>
+          <button id="workerSearch" type="button">SEARCH</button>
+        </div>
+
+        <div id="workerResult" class="result"></div>
+      </section>
+
+      <section id="admin" class="panel section">
+        <div class="admin-grid">
+          <div class="stats-card">
+            <h2>DAILY TOTAL LEADS</h2>
+            <label for="adminDate">Selected Date</label>
+            <input id="adminDate" type="date">
+            <div id="dailyLeadSummary" class="lead-summary">
+              <div class="lead-empty">No Report Found</div>
+            </div>
+          </div>
+
+          <div class="import-card">
+            <h2>IMPORT REPORTS</h2>
+            <label for="reportText">Paste username and report, one per line</label>
+            <textarea id="reportText" placeholder="username1    25&#10;username2    18"></textarea>
+            <button id="importBtn" type="button">IMPORT REPORTS</button>
+            <div id="importMessage" class="message"></div>
+            <div class="hint">The selected date is saved as the report date. Upload time is never used as the report date.</div>
+          </div>
+        </div>
+
+        <div class="history-card">
+          <h2>Date-wise Total Leads</h2>
+          <div id="adminLeadHistory" class="result"></div>
+        </div>
+
+        <div class="management-card" style="margin-top: 18px;">
+          <div class="management-header">
+            <h2>REPORT MANAGEMENT</h2>
+            <button id="addReportBtn" class="add-btn" type="button">+ ADD REPORT</button>
+          </div>
+
+          <label for="adminManagementDate">Filter Date</label>
+          <input id="adminManagementDate" type="date">
+          <div id="adminReportTable" class="result"></div>
+        </div>
+
+        <div class="search-card" style="margin-top: 18px;">
+          <h2>Search Reports</h2>
+          <div class="actions">
+            <div>
+              <label for="adminUsername">Username</label>
+              <input id="adminUsername" placeholder="Username">
+            </div>
+            <button id="adminSearch" type="button">SEARCH</button>
+          </div>
+          <div id="adminResult" class="result"></div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <div id="reportModal" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="reportModalTitle">Add Report</h3>
+        <button id="closeReportModal" type="button" class="icon-close" aria-label="Close">×</button>
+      </div>
+
+      <form id="reportForm" novalidate>
+        <input type="hidden" id="reportModalId">
+        <div class="modal-grid">
+          <div>
+            <label for="reportDate">Date</label>
+            <input id="reportDate" type="date">
+          </div>
+          <div>
+            <label for="reportUsername">Worker / Username</label>
+            <input id="reportUsername" type="text" placeholder="Worker name">
+          </div>
+          <div>
+            <label for="reportLead">Lead Count</label>
+            <input id="reportLead" type="number" min="0" step="1" placeholder="0">
+          </div>
+          <div>
+            <label for="reportPayment">Payment Info</label>
+            <input id="reportPayment" type="text" placeholder="Optional">
+          </div>
+          <div class="full-width">
+            <label for="reportDetails">Report Details</label>
+            <textarea id="reportDetails" placeholder="Optional notes or details"></textarea>
+          </div>
+        </div>
+
+        <div id="reportModalMessage" class="message"></div>
+
+        <div class="modal-actions">
+          <button type="button" id="cancelReportModal" class="secondary">Cancel</button>
+          <button type="submit" id="saveReportBtn">Save Report</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
+
